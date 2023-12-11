@@ -1,80 +1,62 @@
-const { NotImplementedError } = require("../extensions/index.js");
-
-module.exports = class BloomFilter {
-  /**
-   * @param {number} size - the size of the storage.
-   */
-  constructor() {
-    // Bloom filter size directly affects the likelihood of false positives.
-    // The bigger the size the lower the likelihood of false positives.
+class BloomFilter {
+  constructor(size = 18) {
+    this.size = size;
+    this.bitArray = new Array(size).fill(false);
   }
 
-  /**
-   * @param {string} item
-   */
-  insert(/* item */) {
-    throw new NotImplementedError("Not implemented");
-    // remove line with error and write your code here
+  createStore(size) {
+    const store = new Array(size).fill(false);
+
+    return {
+      getValue(index) {
+        return store[index];
+      },
+      setValue(index, value) {
+        store[index] = value;
+      },
+    };
   }
 
-  /**
-   * @param {string} item
-   * @return {boolean}
-   */
-  mayContain(/* item */) {
-    throw new NotImplementedError("Not implemented");
-    // remove line with error and write your code here
+  hash1(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash << 5) - hash + str.charCodeAt(i);
+    }
+    return Math.abs(hash) % this.size;
+  }
+  
+
+  hash2(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash << 5) - hash + str.charCodeAt(i);
+    }
+    return Math.abs(hash) % this.size;
   }
 
-  /**
-   * Creates the data store for our filter.
-   * We use this method to generate the store in order to
-   * encapsulate the data itself and only provide access
-   * to the necessary methods.
-   *
-   * @param {number} size
-   * @return {Object}
-   */
-  createStore(/* size */) {
-    throw new NotImplementedError("Not implemented");
-    // remove line with error and write your code here
+  hash3(str) {
+    let hash = 5381;
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash << 5) + hash + str.charCodeAt(i);
+    }
+    return Math.abs(hash) % this.size;
   }
 
-  /**
-   * @param {string} item
-   * @return {number}
-   */
-  hash1(/* item */) {
-    throw new NotImplementedError("Not implemented");
-    // remove line with error and write your code here
+  getHashValues(str) {
+    return [this.hash1(str), this.hash2(str), this.hash3(str)].map(value => value % this.size);
+  }  
+  
+  insert(str) {
+    const hashValues = this.getHashValues(str);
+    hashValues.forEach((hash) => {
+      this.bitArray[hash] = true;
+    });
   }
 
-  /**
-   * @param {string} item
-   * @return {number}
-   */
-  hash2(/* item */) {
-    throw new NotImplementedError("Not implemented");
-    // remove line with error and write your code here
+  mayContain(str) {
+    const hashValues = this.getHashValues(str);
+    return hashValues.every((hash) => this.bitArray[hash]);
   }
+}
 
-  /**
-   * @param {string} item
-   * @return {number}
-   */
-  hash3(/* item */) {
-    throw new NotImplementedError("Not implemented");
-    // remove line with error and write your code here
-  }
-
-  /**
-   * Runs all 3 hash functions on the input and returns an array of results.
-   *
-   * @param {string} item
-   * @return {number[]}
-   */
-  getHashValues(/* item */) {
-    throw new NotImplementedError("Not implemented");
-    // remove line with error and write your code here
-  }
-};
+module.exports = BloomFilter;
